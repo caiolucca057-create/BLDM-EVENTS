@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, session, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import psycopg
+from psycopg.rows import dict_row
 import os
 
 app = Flask(__name__)
@@ -10,13 +11,11 @@ app.secret_key = os.environ.get(
     "bldm-chave-temporaria-trocar-depois"
 )
 
-DATABASE = "bldm.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
 def conectar():
-    conexao = sqlite3.connect(DATABASE)
-    conexao.row_factory = sqlite3.Row
-    return conexao
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 
 def iniciar_banco():
@@ -24,7 +23,7 @@ def iniciar_banco():
 
     conexao.execute("""
         CREATE TABLE IF NOT EXISTS admins (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             nome TEXT NOT NULL,
             senha TEXT NOT NULL
         )
@@ -32,7 +31,7 @@ def iniciar_banco():
 
     conexao.execute("""
         CREATE TABLE IF NOT EXISTS eventos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             titulo TEXT NOT NULL,
             data TEXT NOT NULL,
             hora TEXT,
@@ -46,7 +45,7 @@ def iniciar_banco():
 
     if admin is None:
         conexao.execute(
-            "INSERT INTO admins (nome, senha) VALUES (?, ?)",
+            "INSERT INTO admins (nome, senha) VALUES (%s, %s)",
             (
                 "Administrador",
                 generate_password_hash("bldm123")
@@ -170,7 +169,8 @@ def criar_evento():
     cursor = conexao.execute("""
         INSERT INTO eventos
         (titulo, data, hora, descricao)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
     """, (
         titulo,
         data,
@@ -180,7 +180,7 @@ def criar_evento():
 
     conexao.commit()
 
-    evento_id = cursor.lastrowid
+    evento_id = cursor.fetchone()["id"]
 
     conexao.close()
 
@@ -218,7 +218,7 @@ def editar_evento(evento_id):
             data = ?,
             hora = ?,
             descricao = ?
-        WHERE id = ?
+        WHERE id = %s
     """, (
         titulo,
         data,
@@ -254,7 +254,7 @@ def excluir_evento(evento_id):
     conexao = conectar()
 
     cursor = conexao.execute(
-        "DELETE FROM eventos WHERE id = ?",
+        "DELETE FROM eventos WHERE id = %s",
         (evento_id,)
     )
 
