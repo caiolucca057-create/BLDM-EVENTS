@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>BLDM — Eventos</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>🐸 BLDM</h1>
+    <p>Calendário de Eventos</p>
+</header>
+
+<main>
+
+    <nav class="abas">
+
+        <button class="aba ativa" onclick="mostrarAba('calendario')">
+            📅 Calendário
+        </button>
+
+        <button class="aba" onclick="mostrarAba('eventos')">
+            🚀 Eventos Futuros
+        </button>
+
+    </nav>
+
+
+    <!-- CALENDÁRIO -->
+
+    <div id="calendario" class="conteudo-aba">
+
+        <section>
+
+            <h2>🎪 Próximo Evento</h2>
+
+            <div id="proximo-evento" class="evento-destaque">
+
+                <h3>🐸 BLDM Eventos</h3>
+
+                <p>
+                    Confira aqui os próximos eventos do grupo.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <section>
+
+            <h2>🌙 Programação Semanal</h2>
+
+            <div class="semana">
+
+                <div class="dia">
+                    <strong>Segunda</strong>
+                    <span>🎲 Noite do Caos</span>
+                    <p>
+                        Um membro escolhe o jogo da noite e a galera joga junto.
+                    </p>
+                </div>
+
+                <div class="dia">
+                    <strong>Terça</strong>
+                    <span>🎮 Noite dos Jogos</span>
+                    <p>
+                        Uma noite para jogar e se divertir com a galera.
+                    </p>
+                </div>
+
+                <div class="dia">
+                    <strong>Quarta</strong>
+                    <span>🕵️ Noite da Traição</span>
+                    <p>
+                        Estratégia, impostores, alianças, mentiras e traições.
+                    </p>
+                </div>
+
+                <div class="dia">
+                    <strong>Quinta</strong>
+                    <span>👻 Noite do Terror</span>
+                    <p>
+                        Jogos de terror, sustos e desafios assustadores.
+                    </p>
+                </div>
+
+                <div class="dia livre">
+                    <strong>Sexta</strong>
+                    <span>🚫 Sem jogos</span>
+                    <p>
+                        Dia livre, sem programação oficial do BLDM.
+                    </p>
+                </div>
+
+                <div class="dia livre">
+                    <strong>Sábado</strong>
+                    <span>🚫 Sem jogos</span>
+                    <p>
+                        Dia livre, sem programação oficial do BLDM.
+                    </p>
+                </div>
+
+                <div class="dia livre">
+                    <strong>Domingo</strong>
+                    <span>🚫 Sem jogos</span>
+                    <p>
+                        Dia livre, sem programação oficial do BLDM.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section>
+
+            <h2>📅 Datas Especiais</h2>
+
+            <div id="datas-especiais" class="datas">
+
+                <p>Carregando datas...</p>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <!-- EVENTOS -->
+
+    <div id="eventos" class="conteudo-aba" style="display:none;">
+
+        <section>
+
+            <h2>🚀 Eventos Futuros</h2>
+
+            <input
+                id="pesquisa-eventos"
+                type="text"
+                placeholder="🔎 Procurar evento..."
+                oninput="mostrarEventos()"
+                style="
+                    width:100%;
+                    padding:14px;
+                    margin-bottom:18px;
+                    border-radius:10px;
+                    border:1px solid #30303a;
+                    background:#17171f;
+                    color:white;
+                    outline:none;
+                "
+            >
+
+            <div id="lista-eventos" class="lista-eventos"></div>
+
+        </section>
+
+
+        <!-- LOGIN ADM -->
+
+        <section id="login-adm" class="area-adm">
+
+            <h2>🔐 Área dos Administradores</h2>
+
+            <p>
+                Entre como administrador para gerenciar os eventos futuros.
+            </p>
+
+            <input
+                id="senha-adm"
+                type="password"
+                placeholder="Senha do ADM"
+                style="
+                    width:100%;
+                    max-width:400px;
+                    padding:13px;
+                    margin-bottom:12px;
+                    border-radius:10px;
+                    border:1px solid #30303a;
+                    background:#17171f;
+                    color:white;
+                    outline:none;
+                "
+            >
+
+            <br>
+
+            <button class="botao-adm" onclick="entrarAdm()">
+                🔑 Entrar
+            </button>
+
+            <p id="mensagem-login"></p>
+
+        </section>
+
+
+        <!-- PAINEL ADM -->
+
+        <section
+            id="painel-adm"
+            class="area-adm"
+            style="display:none;"
+        >
+
+            <h2>⚙️ Painel ADM</h2>
+
+            <p>
+                Você está no painel de administração do BLDM.
+            </p>
+
+
+            <div style="
+                display:flex;
+                flex-direction:column;
+                gap:10px;
+                max-width:600px;
+            ">
+
+                <input
+                    id="evento-titulo"
+                    type="text"
+                    placeholder="Nome do evento"
+                    style="
+                        padding:13px;
+                        border-radius:10px;
+                        border:1px solid #30303a;
+                        background:#17171f;
+                        color:white;
+                    "
+                >
+
+                <input
+                    id="evento-data"
+                    type="date"
+                    style="
+                        padding:13px;
+                        border-radius:10px;
+                        border:1px solid #30303a;
+                        background:#17171f;
+                        color:white;
+                    "
+                >
+
+                <input
+                    id="evento-hora"
+                    type="time"
+                    style="
+                        padding:13px;
+                        border-radius:10px;
+                        border:1px solid #30303a;
+                        background:#17171f;
+                        color:white;
+                    "
+                >
+
+                <textarea
+                    id="evento-descricao"
+                    placeholder="Descrição do evento"
+                    rows="4"
+                    style="
+                        padding:13px;
+                        border-radius:10px;
+                        border:1px solid #30303a;
+                        background:#17171f;
+                        color:white;
+                        resize:vertical;
+                    "
+                ></textarea>
+
+                <button
+                    class="botao-adm"
+                    onclick="salvarEvento()"
+                >
+                    ➕ Criar evento
+                </button>
+
+            </div>
+
+            <br>
+
+            <button
+                class="botao-adm"
+                onclick="sairAdm()"
+            >
+                🚪 Sair do ADM
+            </button>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<footer>
+
+    <p>
+        🐸 BLDM • Desde sempre reunindo a galera.
+    </p>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
