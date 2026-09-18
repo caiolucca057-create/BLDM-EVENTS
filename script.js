@@ -1,16 +1,20 @@
 async function mostrarAba(aba) {
     const calendario = document.getElementById("calendario");
     const eventos = document.getElementById("eventos");
+    const tvbox = document.getElementById("tvbox");
     const botoes = document.querySelectorAll(".aba");
 
-    if (aba === "calendario") {
-        calendario.style.display = "block";
-        eventos.style.display = "none";
-    } else {
-        calendario.style.display = "none";
-        eventos.style.display = "block";
+    calendario.style.display = aba === "calendario" ? "block" : "none";
+    eventos.style.display = aba === "eventos" ? "block" : "none";
+    tvbox.style.display = aba === "tvbox" ? "block" : "none";
+
+    if (aba === "eventos") {
         await verificarAdm();
         await mostrarEventos();
+    }
+
+    if (aba === "tvbox") {
+        await mostrarStatusTvbox();
     }
 
     botoes.forEach(function(botao) {
@@ -19,8 +23,10 @@ async function mostrarAba(aba) {
 
     if (aba === "calendario") {
         botoes[0].classList.add("ativa");
-    } else {
+    } else if (aba === "eventos") {
         botoes[1].classList.add("ativa");
+    } else {
+        botoes[2].classList.add("ativa");
     }
 }
 
@@ -712,6 +718,175 @@ async function excluirEvento(id) {
         alert("❌ Erro de conexão.");
     }
 }
+
+
+/* =========================
+   TVBOX
+========================= */
+
+function formatarTempoDesde(segundos) {
+
+    if (segundos == null) return "nunca";
+
+    if (segundos < 60) {
+        return `${Math.floor(segundos)}s atrás`;
+    }
+
+    if (segundos < 3600) {
+        return `${Math.floor(segundos / 60)}min atrás`;
+    }
+
+    return `${Math.floor(segundos / 3600)}h atrás`;
+}
+
+
+function criarBarra(percentual, cor) {
+
+    const valor = percentual == null ? 0 : Math.min(100, percentual);
+
+    return `
+        <div class="tvbox-barra-fundo">
+            <div
+                class="tvbox-barra-preenchida"
+                style="width:${valor}%; background:${cor};"
+            ></div>
+        </div>
+    `;
+}
+
+
+async function buscarStatusTvbox() {
+
+    try {
+
+        const resposta = await fetch("/api/tvbox/status");
+
+        if (!resposta.ok) {
+            throw new Error("Erro ao buscar status da tvbox.");
+        }
+
+        return await resposta.json();
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        return null;
+    }
+}
+
+
+async function mostrarStatusTvbox() {
+
+    const container = document.getElementById("tvbox-status");
+
+    if (!container) return;
+
+    const status = await buscarStatusTvbox();
+
+    if (!status || !status.dados) {
+
+        container.innerHTML = `
+            <p>
+                🐸 Nenhum sinal da TV Box ainda. Verifique se o
+                <code>tvbox_agent.py</code> está rodando.
+            </p>
+        `;
+
+        return;
+    }
+
+    const dados = status.dados;
+
+    const badge = status.online
+        ? `<span class="tvbox-badge tvbox-online">🟢 Online</span>`
+        : `<span class="tvbox-badge tvbox-offline">🔴 Offline</span>`;
+
+    const servicosHTML = (dados.servicos || []).length
+        ? dados.servicos.map(function(servico) {
+
+            const statusOk = servico.status === "online";
+
+            return `
+                <div class="tvbox-servico">
+                    <span>${statusOk ? "🟢" : "🔴"} ${escaparHTML(servico.nome || "?")}</span>
+                    <small>
+                        CPU ${servico.cpu_percent ?? "?"}%
+                        • RAM ${servico.memoria_mb ?? "?"}MB
+                    </small>
+                </div>
+            `;
+
+        }).join("")
+        : `<p>Nenhum serviço reportado.</p>`;
+
+    container.innerHTML = `
+        <div class="tvbox-cabecalho">
+            ${badge}
+            <span class="tvbox-visto">
+                Última atualização: ${formatarTempoDesde(status.segundos_desde_ultimo_ping)}
+            </span>
+        </div>
+
+        <div class="tvbox-grid">
+
+            <div class="tvbox-metrica">
+                <strong>📶 Ping</strong>
+                <span>${dados.ping_ms != null ? dados.ping_ms + " ms" : "—"}</span>
+            </div>
+
+            <div class="tvbox-metrica">
+                <strong>⚡ Velocidade</strong>
+                <span>${dados.download_mbps != null ? dados.download_mbps + " Mbps" : "—"}</span>
+            </div>
+
+            <div class="tvbox-metrica">
+                <strong>🌡️ Temperatura</strong>
+                <span>${dados.cpu_temp_c != null ? dados.cpu_temp_c + " °C" : "—"}</span>
+            </div>
+
+            <div class="tvbox-metrica">
+                <strong>🧠 CPU</strong>
+                <span>${dados.cpu_percent != null ? dados.cpu_percent + "%" : "—"}</span>
+                ${criarBarra(dados.cpu_percent, "#7c7cf5")}
+            </div>
+
+            <div class="tvbox-metrica">
+                <strong>💾 RAM</strong>
+                <span>
+                    ${dados.ram_disponivel_mb != null ? dados.ram_disponivel_mb + "MB livres de " + dados.ram_total_mb + "MB" : "—"}
+                </span>
+                ${criarBarra(dados.ram_percentual, "#f5a623")}
+            </div>
+
+            <div class="tvbox-metrica">
+                <strong>📦 Armazenamento</strong>
+                <span>
+                    ${dados.disco_livre_gb != null ? dados.disco_livre_gb + "GB livres de " + dados.disco_total_gb + "GB" : "—"}
+                </span>
+                ${criarBarra(dados.disco_percentual, "#4cd964")}
+            </div>
+
+        </div>
+
+        <h3 class="tvbox-subtitulo">⚙️ Serviços</h3>
+
+        <div class="tvbox-servicos">
+            ${servicosHTML}
+        </div>
+    `;
+}
+
+
+setInterval(function() {
+
+    const aba = document.getElementById("tvbox");
+
+    if (aba && aba.style.display !== "none") {
+        mostrarStatusTvbox();
+    }
+
+}, 20000);
 
 
 /* =========================

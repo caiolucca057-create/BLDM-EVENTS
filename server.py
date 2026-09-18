@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, session, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg
 from psycopg.rows import dict_row
+from psycopg.types.json import Json
+from datetime import datetime, timezone
 import os
 
 app = Flask(__name__)
@@ -12,6 +14,13 @@ app.secret_key = os.environ.get(
 )
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+
+TVBOX_TOKEN = os.environ.get(
+    "TVBOX_TOKEN",
+    "6oPzCjgW6B8wRqwCDfNrM8-xHXYfqXqNK45Y05RJ5ng"
+)
+
+TVBOX_TIMEOUT_SEGUNDOS = 90
 
 
 def conectar():
@@ -36,6 +45,15 @@ def iniciar_banco():
             data TEXT NOT NULL,
             hora TEXT,
             descricao TEXT NOT NULL
+        )
+    """)
+
+    conexao.execute("""
+        CREATE TABLE IF NOT EXISTS tvbox_status (
+            id INTEGER PRIMARY KEY DEFAULT 1,
+            atualizado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+            dados JSONB NOT NULL,
+            CONSTRAINT tvbox_status_linha_unica CHECK (id = 1)
         )
     """)
 
@@ -271,6 +289,74 @@ def excluir_evento(evento_id):
 
     return jsonify({
         "sucesso": True
+    })
+
+
+# =========================
+# TVBOX (STATUS REMOTO)
+# =========================
+
+@app.route("/api/tvbox/heartbeat", methods=["POST"])
+def tvbox_heartbeat():
+
+    token = request.headers.get("X-TVBOX-TOKEN", "")
+
+    if token != TVBOX_TOKEN:
+        return jsonify({
+            "erro": "Token inválido."
+        }), 401
+
+    dados = request.get_json() or {}
+
+    conexao = conectar()
+
+    conexao.execute("""
+        INSERT INTO tvbox_status (id, atualizado_em, dados)
+        VALUES (1, now(), %s)
+        ON CONFLICT (id) DO UPDATE
+        SET atualizado_em = now(),
+            dados = EXCLUDED.dados
+    """, (Json(dados),))
+
+    conexao.commit()
+    conexao.close()
+
+    return jsonify({
+        "sucesso": True
+    })
+
+
+@app.route("/api/tvbox/status", methods=["GET"])
+def tvbox_status():
+
+    conexao = conectar()
+
+    linha = conexao.execute(
+        "SELECT atualizado_em, dados FROM tvbox_status WHERE id = 1"
+    ).fetchone()
+
+    conexao.close()
+
+    if linha is None:
+        return jsonify({
+            "online": False,
+            "atualizado_em": None,
+            "dados": None
+        })
+
+    agora = datetime.now(timezone.utc)
+
+    segundos_desde_ultimo_ping = (
+        agora - linha["atualizado_em"]
+    ).total_seconds()
+
+    online = segundos_desde_ultimo_ping <= TVBOX_TIMEOUT_SEGUNDOS
+
+    return jsonify({
+        "online": online,
+        "atualizado_em": linha["atualizado_em"].isoformat(),
+        "segundos_desde_ultimo_ping": segundos_desde_ultimo_ping,
+        "dados": linha["dados"]
     })
 
 

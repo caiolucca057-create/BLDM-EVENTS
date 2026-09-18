@@ -234,6 +234,112 @@ h2 {
     opacity: 0.85;
 }
 
+.tvbox-card {
+    background: #14141b;
+    border: 1px solid #2c2c37;
+    border-radius: 17px;
+    padding: 24px;
+}
+
+.tvbox-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.tvbox-badge {
+    font-weight: bold;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+}
+
+.tvbox-online {
+    background: rgba(76, 217, 100, 0.15);
+    color: #4cd964;
+}
+
+.tvbox-offline {
+    background: rgba(255, 69, 58, 0.15);
+    color: #ff453a;
+}
+
+.tvbox-visto {
+    color: #8e8e9c;
+    font-size: 14px;
+}
+
+.tvbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+.tvbox-metrica {
+    background: #1a1a23;
+    border: 1px solid #292934;
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.tvbox-metrica strong {
+    display: block;
+    font-size: 14px;
+    color: #9999a8;
+    margin-bottom: 6px;
+}
+
+.tvbox-metrica span {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.tvbox-barra-fundo {
+    margin-top: 10px;
+    height: 6px;
+    border-radius: 999px;
+    background: #292934;
+    overflow: hidden;
+}
+
+.tvbox-barra-preenchida {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s;
+}
+
+.tvbox-subtitulo {
+    margin-top: 26px;
+    margin-bottom: 14px;
+    font-size: 19px;
+}
+
+.tvbox-servicos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tvbox-servico {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: #17171f;
+    border: 1px solid #30303b;
+    border-radius: 12px;
+    padding: 13px 16px;
+}
+
+.tvbox-servico small {
+    color: #8e8e9c;
+}
+
 footer {
     text-align: center;
     padding: 30px 20px;
